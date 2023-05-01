@@ -13,7 +13,7 @@ def index():
     Tweet <input type="text" name="tweet"/>
     <br>
     Username <input type="text" name="username"/>
-    <br>
+    <br><br>
     <input type="submit" value="Tweet">
   </form>
   '''
