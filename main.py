@@ -1,31 +1,48 @@
-from flask import Flask, request
+from flask import Flask, request, redirect, url_for
 
 app = Flask(__name__)
 tweets = []
 
+current_user = ''
 
-@app.route('/')
-def index():
-  #return 'Welcome to Raptor Twitter'
-  return '''
-  <form method="POST" action="postoffice">
-    <h3>What is happening?</h3>
-    <br>
-    Tweet <input type="text" name="tweet"/>
-    <br>
-    Username <input type="text" name="username"/>
-    <br><br>
-    <input type="submit" value="Tweet">
-  </form>
+
+def get_html_form(action, header, fieldtitle, fieldname, buttonvalue):
+  return f'''
+   <form method="POST" action={action}>
+   <h3>{header}</h3>
+      {fieldtitle}: <input type="text" name="{fieldname}"/>
+      <input type="submit" value="{buttonvalue}">
+    </form>
   '''
 
 
-@app.route('/postoffice', methods=['POST'])
+@app.route('/')
+def index():
+  if current_user:
+    return redirect(url_for('tweet'))
+  else:
+    return get_html_form('/login', 'Please Login', 'Username', 'username',
+                         'LogIn')
+
+
+@app.route('/login', methods=['POST'])
+def login():
+  global current_user
+  current_user = request.form['username']
+  return redirect(url_for('tweet'))
+
+
+@app.route('/tweet')
+def tweet():
+  return get_html_form('/save-tweet', 'What is happening?', 'Tweet', 'tweet',
+                       'Tweet')
+
+
+@app.route('/save-tweet', methods=['POST'])
 def contact():
   tweet = request.form.get('tweet')
-  username = request.form['username']
   tweets.append(tweet)
-  return 'Successfully received tweet: ' + tweet + ' Username: ' + username
+  return 'Successfully received tweet: ' + tweet
 
 
 @app.route('/my-tweets')
