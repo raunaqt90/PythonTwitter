@@ -1,9 +1,13 @@
 from flask import Flask, request, redirect, url_for, render_template
 from tweets import add_tweets, get_all_tweets, get_tweets_by_username
+from users import  create_user, password_match, get_user_by_username
 
 app = Flask(__name__)
-
 current_user = ''
+
+from db import init
+
+init()
 
 
 def get_html_form(action, header, fieldtitle, fieldname, buttonvalue):
@@ -21,19 +25,20 @@ def index():
   if current_user:
     return redirect(url_for('tweet'))
   else:
-    return render_template('form.html',
-                           action='/login',
-                           header='Please Login',
-                           fieldtitle='Username',
-                           fieldname='username',
-                           buttonvalue='LogIn')
+    return render_template('login.html')
 
 
 @app.route('/login', methods=['POST'])
 def login():
   global current_user
-  current_user = request.form['username']
-  return redirect(url_for('tweet'))
+  username = request.form['username']
+  password = request.form['password']
+  authenticated = password_match(username,password)
+  if authenticated:
+    current_user = username
+    return redirect(url_for('tweet'))
+  else:
+    return f'Login Failed. <br> <a href="/">Try again</a>'
 
 
 @app.route('/logout')
@@ -70,6 +75,21 @@ def user_tweets(username=None):
   return render_template('tweets.html',
                          tweets=tweets,
                          current_user=current_user,
-                         username = username)
+                         username=username)
+
+
+@app.route('/register', methods=['GET'])
+def register():
+  return render_template('register.html')
+
+
+@app.route('/register-post', methods=['POST'])
+def register_post():
+  username = request.form['username']
+  password = request.form['password']
+  create_user(username, password)
+  user = get_user_by_username(username)
+  print(user)
+  return f'Succesfully registered {username} <br> <a href="/">Login</a>'
 
 app.run(host='0.0.0.0', port=81)
